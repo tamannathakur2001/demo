@@ -9,4 +9,3 @@ spec:
     - protocol: TCP
       port: {{ .Values.app2.servicePort }}
       targetPort: 5001
-  type: NodePort
