@@ -34,11 +34,18 @@ MINIKUBE_IP=$(minikube ip)
 echo $MINIKUBE_IP
 
 kubectl port-forward svc/app1-service 5000:5000 &
+APP1_PID=$!
 kubectl port-forward svc/app2-service 5001:5001 &
+APP2_PID=$!
 
 # Print HTTP responses
 echo "Fetching HTTP response from app1..."
-curl http://localhost:5000/api/message
+curl -s http://localhost:5000/api/message
+echo ""
 
 echo "Fetching HTTP response from app2..."
-curl http://localhost:5001/api/reverse-message
+curl -s http://localhost:5001/api/reverse-message
+echo ""
+
+kill $APP1_PID
+kill $APP2_PID
