@@ -15,8 +15,5 @@ spec:
       containers:
       - name: app2
         image: {{ .Values.app2.image }}
-        env:
-        - name: APP1_SERVICE_HOST
-          value: "app1-service"
         ports:
         - containerPort: 5001
