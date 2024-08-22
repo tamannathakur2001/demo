@@ -1,0 +1,7 @@
+app1:
+  image: "rajeshth05/application1:latest"
+  servicePort: 5000
+
+app2:
+  image: "rajeshth05/application2:latest"
+  servicePort: 5001
