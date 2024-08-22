@@ -1,7 +1,0 @@
-app1:
-  image: "rajeshth05/app1:latest"
-  servicePort: 5000
-
-app2:
-  image: "rajeshth05/app2:latest"
-  servicePort: 5001
