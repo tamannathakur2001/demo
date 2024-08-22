@@ -1,75 +1,37 @@
 #!/bin/bash
 
+# Define variables
+DOCKER_USERNAME="rajeshth05"
+DOCKER_PASSWORD="kakuraja@12"
+HELM_RELEASE_NAME="my-apps"
+HELM_CHART_PATH="./helm-chart"
+NAMESPACE="default"
 
-echo "###################### START DEPLOYMENT ########################"
-
-#################################
-#  SCRIPT INPUT ARGS			#
-#################################
-
-DOCKER_USERNAME=$1 # Please provide your Docker Username as an script argument
-DOCKER_PASSWORD=$2 # Please provide your Docker Password as an script argument
-
-#################################
-#  INITIALIZATION STAGE			#
-#################################
-echo "INITIALIZING VARIABLES"
-APPLICATION1_IMAGE="application1"
-APPLICATION2_IMAGE="application2"
-APP1_IMG_NAME=$DOCKER_USERNAME/$APPLICATION1_IMAGE
-APP2_IMG_NAME=$DOCKER_USERNAME/$APPLICATION2_IMAGE
-
-echo "APP1_IMG_NAME: $APP1_IMG_NAME"
-echo "APP2_IMG_NAME: $APP2_IMG_NAME"
-
-## Using SED command to dynamically chaning the Image Name in docker compose file
-# sed -i "s|image: [^/]*/$APPLICATION1_IMAGE|image: $APP1_IMG_NAME|g" docker-compose.yml
-# sed -i "s|image: [^/]*/$APPLICATION2_IMAGE|image: $APP2_IMG_NAME|g" docker-compose.yml
-
-#################################
-#        BUILD STAGE			#
-#################################
+# Build and push Docker images
 echo "Building Docker images..."
-docker build --no-cache -t $APP1_IMG_NAME:latest ./application1
-docker build --no-cache -t $APP2_IMG_NAME:latest ./application2
+docker build -t $DOCKER_USERNAME/app1:latest ./app1
+docker build -t $DOCKER_USERNAME/app2:latest ./app2
 
-# Pusing image to Docker Hub
 echo "Pushing Docker images to Docker Hub..."
 echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-docker push $APP1_IMG_NAME:latest
-docker push $APP2_IMG_NAME:latest
+docker push $DOCKER_USERNAME/app1:latest
+docker push $DOCKER_USERNAME/app2:latest
 
-##############################
-       # DEPLOY STAGE			#
-##############################
-# Deploy to Kubernetes
-# echo "Deploying to Kubernetes..."
-# docker compose up --detach
+# Deploy to Kubernetes using Helm
+echo "Deploying to Kubernetes..."
+helm upgrade --install $HELM_RELEASE_NAME $HELM_CHART_PATH --namespace $NAMESPACE
 
-# echo "Waiting for services to be ready..."
-# sleep 10
+# Wait for services to be ready
+echo "Waiting for services to be ready..."
+sleep 30
 
+# Get the Cluster IP of the services
+APP1_IP=$(kubectl get svc/app1-service -o jsonpath='{.spec.clusterIP}' -n $NAMESPACE)
+APP2_IP=$(kubectl get svc/app2-service -o jsonpath='{.spec.clusterIP}' -n $NAMESPACE)
 
-##############################
-     #HTTP RESPONSE STAGE		#
-##############################
-# echo "========Application1 Response ========="
-# echo "Fetching HTTP response from app1..."
-# curl -s http://localhost:5000/$APPLICATION1_IMAGE/msg-response
+# Print HTTP responses
+echo "Fetching HTTP response from app1..."
+curl http://$APP1_IP:5000/api/message
 
-# echo ""
-
-# echo "========Application2 Response ========="
-# echo "Fetching HTTP response from app2..."
-# curl -s http://localhost:5001/$APPLICATION2_IMAGE/reverse-msg-response
-
-##############################
-  #CLEAN UP ALL UNUSED IMAGES	#
-##############################
-# Uncomment code if you wnat to cleanup older unused images from minikube. I used it as while testing there were many unused images got created and that not great.
-
-# echo ""
-# echo "y" | docker image prune -a
-
-# echo "###################### END ########################"
-# echo ""
+echo "Fetching HTTP response from app2..."
+curl http://$APP2_IP:5001/api/reverse-message
