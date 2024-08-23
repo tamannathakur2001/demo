@@ -15,5 +15,16 @@ spec:
       containers:
       - name: app2
         image: {{ .Values.app2.image }}
+        env:
+        - name: MINIKUBE_IP
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: MINIKUBE_IP
+        - name: APP1_NODEPORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP1_NODEPORT
         ports:
         - containerPort: 5001
